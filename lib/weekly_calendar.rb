@@ -13,6 +13,20 @@ module WeeklyHelper
       concat("<b><a href='?business_hours=true&start_date=#{start_date}'>Business Hours</a> | <a href='?business_hours=false&start_date=#{start_date}'>24-Hours</a></b>")
     end
   end
+
+  def weekly_calendar_with_end_date(objects, *args)
+    options = args.last.is_a?(Hash) ? args.pop : {}
+    date = options[:date] || Time.now
+    e_date = options[:end_date]
+    start_date = Date.new(date.year, date.month, date.day)
+    end_date =  Date.new(e_date.year, e_date.month, e_date.day)
+    concat(tag("div", :id => "week"))
+    yield WeeklyBuilder.new(objects || [], self, options, start_date, end_date)
+    concat("</div>")
+    if options[:include_24_hours] == true
+      concat("<b><a href='?business_hours=true&start_date=#{start_date}'>Business Hours</a> | <a href='?business_hours=false&start_date=#{start_date}'>24-Hours</a></b>")
+    end
+  end
   
   def weekly_links(options)
     date = options[:date]
@@ -61,10 +75,10 @@ module WeeklyHelper
           for day in @start_date..@end_date 
             concat(tag("div", :id => day_row))
             for event in @objects
-              if event.starts_at.strftime('%j').to_s == day.strftime('%j').to_s 
-               if event.starts_at.strftime('%H').to_i >= start_hour and event.ends_at.strftime('%H').to_i <= end_hour
-                  concat(tag("div", :id => "week_event", :style =>"left:#{left(event.starts_at,options[:business_hours])}px;width:#{width(event.starts_at,event.ends_at)}px;", :onclick => "location.href='/events/#{event.id}';"))
-                    truncate = truncate_width(width(event.starts_at,event.ends_at))
+              if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
+               if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
+                  concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
+                    truncate = truncate_width(width(event.start_date,event.end_date))
                     yield(event,truncate)
                   concat("</div>")
                 end
@@ -79,7 +93,7 @@ module WeeklyHelper
     def days      
       concat(tag("div", :id => "days"))
         concat(content_tag("div", "Weekly View", :id => "placeholder"))
-        for day in @start_date..@end_date        
+        for day in @start_date..@end_date
           concat(tag("div", :id => "day"))
           concat(content_tag("b", day.strftime('%A')))
           concat(tag("br"))
