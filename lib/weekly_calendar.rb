@@ -22,7 +22,7 @@ module WeeklyHelper
   #   # do something
   # end
   #
-  # Note: You can't use this with weekly_links
+  # Note: You can't use this with weekly_links since it displays the date range.
   def weekly_calendar_with_end_date(objects, *args)
     options = args.last.is_a?(Hash) ? args.pop : {}
     date = options[:start_date] || Time.now
@@ -86,21 +86,20 @@ module WeeklyHelper
       concat(tag("div", :id => grid))
       for day in @start_date..@end_date
         concat(tag("div", :id => day_row))
-        for event in @objects
-          if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
-            # This means he's not available at this slot time.
-            if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
-              concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
-              truncate = truncate_width(width(event.start_date,event.end_date))
-              yield(event,truncate)
-              concat("</div>")
+        hours.each do |h|
+          for event in @objects
+            if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
+              if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
+                concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
+                truncate = truncate_width(width(event.start_date,event.end_date))
+                yield(event,truncate)
+                concat("</div>")
+              end
             end
           end
-        end
 
-        # Make all other areas clickable
-        if options[:clickable_hours] == true
-          hours.each do |h|
+          if options[:clickable_hours] == true
+            #TODO Replace alert() with links
             concat(content_tag("div", '', :id => "week_eventx", :onclick => "alert('hello #{h}');"))
           end
         end
