@@ -133,7 +133,7 @@ module WeeklyHelper
         hour = starts_at.strftime('%H').to_f - 6
       else
         minutes = starts_at.strftime('%M').to_f * 1.25
-        hour = starts_at.strftime('%H').to_f
+        hour = starts_at.strftime('%H').to_f - 1
       end
       left = (hour * 75) + minutes
     end
