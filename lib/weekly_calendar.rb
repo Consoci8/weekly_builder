@@ -1,6 +1,6 @@
 # WeeklyCalendar
 module WeeklyHelper
-  
+
   def weekly_calendar(objects, *args)
     options = args.last.is_a?(Hash) ? args.pop : {}
     date = options[:date] || Time.now
@@ -14,9 +14,18 @@ module WeeklyHelper
     end
   end
 
+  # Displaying just the hours between the start date and the end date
+  # You could also pass additional hash parameters
+  #
+  # ==== Examples in your view
+  # weekly_calendar_with_end_date(@bookings, :start_date => @date, :end_date => @end_date, :include_24_hours => true, :values => {:user_id => params[:user_id} ) do |w|
+  #   # do something
+  # end
+  #
+  # Note: You can't use this with weekly_links
   def weekly_calendar_with_end_date(objects, *args)
     options = args.last.is_a?(Hash) ? args.pop : {}
-    date = options[:date] || Time.now
+    date = options[:start_date] || Time.now
     e_date = options[:end_date]
     start_date = Date.new(date.year, date.month, date.day)
     end_date =  Date.new(e_date.year, e_date.month, e_date.day)
@@ -24,19 +33,22 @@ module WeeklyHelper
     yield WeeklyBuilder.new(objects || [], self, options, start_date, end_date)
     concat("</div>")
     if options[:include_24_hours] == true
-      concat("<b><a href='?business_hours=true&start_date=#{start_date}'>Business Hours</a> | <a href='?business_hours=false&start_date=#{start_date}'>24-Hours</a></b>")
+      if !options[:values].blank?
+        values = "&" +options[:values].map {|k,v| "#{k}=#{v}" }.join("&").to_s
+      end
+      concat("<b><a href='?business_hours=true&start_date=#{start_date}#{values}'>Business Hours</a> | <a href='?business_hours=false&start_date=#{start_date}#{values}'>24-Hours</a></b>")
     end
   end
-  
+
   def weekly_links(options)
     date = options[:date]
-    start_date = Date.new(date.year, date.month, date.day) 
+    start_date = Date.new(date.year, date.month, date.day)
     end_date = Date.new(date.year, date.month, date.day) + 7
     concat("<a href='?start_date=#{start_date - 7}?user_id='>« Previous Week</a> ")
     concat("#{start_date.strftime("%B %d -")} #{end_date.strftime("%B %d")} #{start_date.year}")
     concat(" <a href='?start_date=#{start_date + 7}?user_id='>Next Week »</a>")
   end
-  
+
   class WeeklyBuilder
     include ::ActionView::Helpers::TagHelper
 
@@ -44,8 +56,8 @@ module WeeklyHelper
       raise ArgumentError, "WeeklyBuilder expects an Array but found a #{objects.inspect}" unless objects.is_a? Array
       @objects, @template, @options, @start_date, @end_date = objects, template, options, start_date, end_date
     end
-    
-    def week(options = {})    
+
+    def week(options = {})
       days
       if options[:business_hours] == "true" or options[:business_hours].blank?
         hours = ["6am","7am","8am","9am","10am","11am","12pm","1pm","2pm","3pm","4pm","5pm","6pm","7pm","8pm"]
@@ -62,49 +74,55 @@ module WeeklyHelper
         start_hour = 1
         end_hour = 24
       end
-      
+
       concat(tag("div", :id => "hours"))
-        concat(tag("div", :id => header_row))
-          for hour in hours
-            header_box = "<b>#{hour}</b>"
-            concat(content_tag("div", header_box, :id => "header_box"))
-          end
-        concat("</div>")
-        
-        concat(tag("div", :id => grid))
-          for day in @start_date..@end_date 
-            concat(tag("div", :id => day_row))
-            for event in @objects
-              if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
-               if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
-                  concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
-                    truncate = truncate_width(width(event.start_date,event.end_date))
-                    yield(event,truncate)
-                  concat("</div>")
-                end
-              end
+      concat(tag("div", :id => header_row))
+      for hour in hours
+        header_box = "<b>#{hour}</b>"
+        concat(content_tag("div", header_box, :id => "header_box"))
+      end
+      concat("</div>")
+
+      concat(tag("div", :id => grid))
+      for day in @start_date..@end_date
+        concat(tag("div", :id => day_row))
+        for event in @objects
+          if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
+            if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
+              concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
+              truncate = truncate_width(width(event.start_date,event.end_date))
+              yield(event,truncate)
+              concat("</div>")
             end
-            concat("</div>")
           end
+        end
+
+        # Make all other areas clickable
+        hours.each do |h|
+          concat(content_tag("div", '', :id => "week_eventx", :onclick => "alert('hello #{h}');"))
+        end
+
         concat("</div>")
+      end
+      concat("</div>")
       concat("</div>")
     end
-  
-    def days      
+
+    def days
       concat(tag("div", :id => "days"))
-        concat(content_tag("div", "Weekly View", :id => "placeholder"))
-        for day in @start_date..@end_date
-          concat(tag("div", :id => "day"))
-          concat(content_tag("b", day.strftime('%A')))
-          concat(tag("br"))
-          concat(day.strftime('%B %d'))
-          concat("</div>")
-        end
-      concat("</div>")      
+      concat(content_tag("div", "", :id => "placeholder"))
+      for day in @start_date..@end_date
+        concat(tag("div", :id => "day"))
+        concat(content_tag("b", day.strftime('%A')))
+        concat(tag("br"))
+        concat(day.strftime('%B %d'))
+        concat("</div>")
+      end
+      concat("</div>")
     end
-    
+
     private
-    
+
     def concat(tag)
       @template.concat(tag)
     end
@@ -127,14 +145,14 @@ module WeeklyHelper
       end_hours = ends_at.strftime('%H').to_i * 60 # 5 * 60 = 300
       end_minutes = ends_at.strftime('%M').to_i + end_hours # 30 + 300 = 330
       difference =  (end_minutes.to_i - start_minutes.to_i) * 1.25 # (330 - 180) = 150 * 1.25 = 187.5
-      
+
       unless difference < 60
         width = difference - 12
       else
         width = 63 #default width (75px minus padding+border)
       end
     end
-    
+
     def truncate_width(width)
       hours = width / 63
       truncate_width = 20 * hours
