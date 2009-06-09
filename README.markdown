@@ -1,3 +1,7 @@
+Info
+==============
+This fork changes the attributes of Event object to start_date & end_date. Needed to use this for an existing on-going project. 
+
 WeeklyBuilder
 ==============
 
@@ -15,7 +19,7 @@ Live demo: http://scheduler.integratehq.com
 Install
 =======
 
-    script/plugin install git://github.com/dmix/weekly_builder.git 
+    script/plugin install git://github.com/dmix/weekly_builder.git
 
 Then check the output if all images and stylesheets have been copied successfully.
 
@@ -24,7 +28,7 @@ How to Use WeeklyBuilder
 
 The calendar builder:
     <%  weekly_calendar(@events, :date => @date, :include_24_hours => true) do |w|  %>
-      <%  w.week(:business_hours => params[:business_hours]) do |event,truncate|  %>
+      <%  w.week(:business_hours => params[:business_hours], :clickable_hours => true) do |event,truncate|  %>
         <%=  event.starts_at.strftime('%I:%M%p')  %>
         <%=  link_to truncate(event.name,truncate), event_path(event)  %>
       <% end -%>
@@ -35,17 +39,23 @@ The Next/Previous week links helper:
 
 In your controller:
     @date = Time.parse("#{params[:start_date]} || Time.now.utc")
-    @start_date = Date.new(@date.year, @date.month, @date.day) 
+    @start_date = Date.new(@date.year, @date.month, @date.day)
     @events = Event.find(:all, :conditions => ['starts_at between ? and ?', @start_date, @start_date + 7])
-  
+
 The event model only requires 2 attributes: starts_at:datetime and ends_at:datetime to calculate width and position on the calendar. In my demo app I ask the user for one date/time (starts_at) and estimated time to complete (for example 2hrs), it then calculates ends_at after it is submitted.
 
 UPDATE: Added a truncate_width method so that long event names are truncated in proportion to the width of the event, this is passed through the week block with |truncate|.
+UPDATE: Added option so that timeslots are clickable to create new
 
 ### Options available:
 
 * `:include_24_hours`:
   Default hours are 6am-8pm, if this set as "true" then an option to switch to a 24-hour schedule appears at the bottom
+
+
+### Options availalble for week:
+* `:clickable_hours`:
+  Setting clickable_hours to true enables the timeslots to be clicked to create new event
 
 Copyright (c) 2009 Dan McGrady http://dmix.ca, released under the MIT license
 

@@ -84,29 +84,29 @@ module WeeklyHelper
       concat("</div>")
 
       concat(tag("div", :id => grid))
-      for day in @start_date..@end_date
-        concat(tag("div", :id => day_row))
-        hours.each do |h|
-          for event in @objects
-            if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
-              if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
-                concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
-                truncate = truncate_width(width(event.start_date,event.end_date))
-                yield(event,truncate)
-                concat("</div>")
+        for day in @start_date..@end_date
+          concat(tag("div", :id => day_row))
+            hours.each do |h|
+              for event in @objects
+                if event.start_date.strftime('%j').to_s == day.strftime('%j').to_s
+                  if event.start_date.strftime('%H').to_i >= start_hour and event.end_date.strftime('%H').to_i <= end_hour
+                    concat(tag("div", :id => "week_event", :style =>"left:#{left(event.start_date,options[:business_hours])}px;width:#{width(event.start_date,event.end_date)}px;", :onclick => "location.href='/events/#{event.id}';"))
+                    truncate = truncate_width(width(event.start_date,event.end_date))
+                    yield(event,truncate)
+                    concat("</div>")
+                  end
+                end
+              end
+
+              if options[:clickable_hours] == true
+                #TODO Replace alert() with links
+                concat(content_tag("div", '', :id => "week_eventx", :onclick => "alert('hello #{h}');"))
               end
             end
-          end
 
-          if options[:clickable_hours] == true
-            #TODO Replace alert() with links
-            concat(content_tag("div", '', :id => "week_eventx", :onclick => "alert('hello #{h}');"))
+            concat("</div>")
           end
-        end
-
         concat("</div>")
-      end
-      concat("</div>")
       concat("</div>")
     end
 

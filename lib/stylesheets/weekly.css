@@ -17,7 +17,7 @@
 #day_row #week_event:hover{background:#E097B3;}
 #day_row #week_eventx{height:57px;width:55px;border-right:1px solid #cfe6ec;padding:17px 1px 0px 18px;float:left;}
 #day_row #week_eventx a{color:#000;}
-#day_row #week_eventx:hover{background:#E097B3;}
+#day_row #week_eventx:hover{background:#C7F980;}
 
 /* 24-hour calendar view */
 #full_day_row{width:1800px;height:75px;position:relative;}
@@ -27,5 +27,5 @@
 #full_header_row{width:1800px;height:54px;background:#A8CFDA;}
 #full_grid{background-color:#FFEDCA;background-image:url(../images/grid.png);width:1800px;}
 #full_day_row #week_eventx{height:57px;width:55px;border-right:1px solid #cfe6ec;padding:17px 1px 0px 18px;float:left;}
-#full_row #week_eventx a{color:#000;}
-#full_row #week_eventx:hover{background:#E097B3;}
+#full_day_row #week_eventx a{color:#000;}
+#full_day_row #week_eventx:hover{background:#C7F980;}
